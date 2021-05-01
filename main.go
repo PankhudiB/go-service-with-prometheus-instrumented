@@ -3,15 +3,16 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go-service/monitoring"
 	"go-service/request"
 	"net/http"
 )
 
 func main() {
 	r := gin.Default()
-	r.POST("/hello", func(ctx *gin.Context) {
-		handleRequest(ctx)
-	})
+
+	r.POST("/hello", handleRequest)
+	r.GET("/metrics", monitoring.PrometheusHandler)
 
 	err := http.ListenAndServe(":8090", r)
 	if err != nil {
