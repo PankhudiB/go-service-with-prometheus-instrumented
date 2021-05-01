@@ -7,11 +7,11 @@ import (
 	"go-service/monitoring/metrics"
 	"go-service/request"
 	"net/http"
-	"strconv"
 )
 
 func main() {
 	r := gin.Default()
+	r.Use(monitoring.CaptureIncomingMetrics)
 
 	r.POST("/hello", handleRequest)
 	r.GET("/metrics", monitoring.PrometheusHandler)
@@ -30,19 +30,9 @@ func handleRequest(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		fmt.Println("Error reading hello request", err.Error())
 		ctx.AbortWithStatus(http.StatusBadRequest)
-		captureMetrics(ctx)
 		return
 	}
 	fmt.Println("Message :", req.Message)
 	ctx.Status(http.StatusOK)
-	captureMetrics(ctx)
 	return
-}
-
-func captureMetrics(ctx *gin.Context) {
-	method := ctx.Request.Method
-	host := ctx.Request.Host
-	path := ctx.FullPath()
-	statusCode := strconv.Itoa(ctx.Writer.Status())
-	metrics.InboundRequestMetrics.WithLabelValues(method, host, path, statusCode)
 }
